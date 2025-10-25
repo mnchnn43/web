@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>오디오 장비 등급별 최저가 비교</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+    <h1>오디오 장비 등급별 최저가 비교</h1>
+    <div class="controls">
+      <label for="keyword">제품 키워드:</label>
+      <select id="keyword">
+        <option value="헤드폰">헤드폰</option>
+        <option value="이어폰">이어폰</option>
+        <option value="마이크">마이크</option>
+      </select>
+      <button id="searchBtn">검색</button>
+    </div>
+  </header>
+
+  <main>
+    <aside>
+      <h2>등급</h2>
+      <div class="levels">
+        <label><input type="radio" name="level" value="entry" checked /> 엔트리</label>
+        <label><input type="radio" name="level" value="mid" /> 미드레인지</label>
+        <label><input type="radio" name="level" value="high" /> 하이엔드</label>
+      </div>
+    </aside>
+
+    <section id="results">
+      <h2 id="resultTitle">결과</h2>
+      <div id="items" class="grid"></div>
+    </section>
+  </main>
+
+  <script>
+    function getApiBase() {
+      const host = window.location.hostname;
+      if (host === 'localhost' || host === '127.0.0.1') {
+        return 'http://localhost:8888';
+      } else {
+        return '';
+      }
+    }
+
+    async function search() {
+      const keyword = document.getElementById('keyword').value;
+      const level = document.querySelector('input[name="level"]:checked').value;
+      document.getElementById('resultTitle').textContent = `${keyword} - ${level}`;
+
+      const base = getApiBase();
+      const url = (base ? base : '') + '/api/search?keyword=' + encodeURIComponent(keyword) + '&level=' + encodeURIComponent(level);
+
+      try {
+        const res = await fetch(url);
+        if (!res.ok) {
+          const text = await res.text();
+          alert('서버 에러: ' + res.status + '\n' + text);
+          return;
+        }
+        const data = await res.json();
+        const container = document.getElementById('items');
+        container.innerHTML = '';
+        if (!data.items || data.items.length === 0) {
+          container.innerHTML = '<p class="empty">조건에 맞는 상품이 없습니다.</p>';
+          return;
+        }
+        data.items.forEach(it => {
+          const el = document.createElement('article');
+          el.className = 'card';
+          el.innerHTML = `
+            <img src="${it.image || 'no-image.png'}" alt="${it.title}" />
+            <h3>${it.title}</h3>
+            <p class="price">₩${it.price.toLocaleString()}</p>
+            <p class="brand">${it.brand}</p>
+          `;
+          container.appendChild(el);
+        });
+      } catch (err) {
+        alert('요청 실패: ' + err.message);
+      }
+    }
+
+    document.getElementById('searchBtn').addEventListener('click', search);
+    window.addEventListener('DOMContentLoaded', search);
+  </script>
+</body>
+</html>
