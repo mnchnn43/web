@@ -1,6 +1,3 @@
-// netlify/functions/search.js — same filters for serverless env
-const fetch = (...args) => import('node-fetch').then(({ default: f }) => f(...args));
-
 const BRANDS = [
   ['슈어', ['Shure', '슈어']],
   ['젠하이저', ['Sennheiser', '젠하이저']],
